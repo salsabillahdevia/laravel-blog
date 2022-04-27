@@ -1,0 +1,136 @@
+- servernya jangan pake artisan, eror. pake xampp sama laragon. (solved. pake xampp pake php sama apache ver 8 terus nyalain artisannya)
+
+- pertama jangan lupa buka file .env buat setting url kayak base urlnya. disitu juga buat setting database.
+
+- kalo bikin file view di laravel tambahin .blade. misal "index.blade.php". itu templating engine nya laravel.
+
+- kalo untuk layouting kan di ci pake file header sama footer. kalo di lv8 itu pake blade, bikin aja file "main.blade.php" di folder view. terus copy dari header sampe footer, nah di dalem containernya ada script "@yield('nama_section)". jadi itu tanda bahwa di dalem container itu bakal nampilin view dari view chlid misal halaman home, about, dll.
+
+- eloquent itu ORM (object relational model) buat interaksi sama database pake "Model" di setiap tabel db. jadi singkatnya eloquent itu sebua kelas buat mengatur database. cara bikinnya pake artisan "php artisan make:model 'Nama_model'" di command pallet/terminal. bisa pake command pallate (ctrl+shift+p) vscode tapi harus instal extension laravel artisan dulu. ketik Artisan:Make Model. terus ketik nama modelnya.
+
+- di laravel ada yang namanya "collection" itu buat membungkus data array menjadi sesuatu yang dinamakan collection. di collection ini nanti araynya bisa diotak atik pake banyak method bisa dibaca di dokumentasi apa aja methodnya.
+
+- di laravel ini belajar pakai mysql workbench.
+
+- bikin dulu databasenya di app tadi, terus setting file .env sesuai dbnya, terus buka terminal ketik "php artisan migrate" buat bikin tabel2 migrasi. jadi itu isi tabelnya kayak file git buat nunjukin perubahan2 pas migrasi. kalo command "php artisan migrate:rollback" itu buat hapus table2 migrasi.
+
+- terus ada command "php artisan migrate:fresh" itu buat hapus tabel2 migrasi terus dibikin lagi tabel2nya. ini buat misalnya mau ubah filed di dalem tabelnya. kita ga ubah di dbms nya, kita tinggal ubah di file laravel nya di folder database/migration/namafile.php. 
+
+- kalo file laravelnya mau di hosting, ubah APP_ENV nya yang tadinya local ke production di file .env
+
+- kalo kita mau migrasi pas env nya production nanti ada warning. soalnya kan kalo dah production pasti tabelnya udah ada isinya. 
+
+- kalo mau bikin ORM (object relational mapper) kita ketik command "php artisan tinker" (tinker itu aplikasi bawaan laravel). nah pas kita migrate itu sebenernya tabelnya udah otomatis dikasih model. misal nama tabelnya "user", nanti nama modelnya "User.php" ada di folder model.
+
+- setelah itu kita harus instansiasi dulu tabel usernya, ketik command "$user = new User", pastikan sebelum ketik command ini udah ketik command "php artisan tinker". jadi nanti bentuk bukaan line nya ">>>"
+
+- terus isi record datanya buat instansiasi objek di modelnya.
+>>> $user = new App\Models\User
+=> App\Models\User {#3516}
+>>> $user = new User
+[!] Aliasing 'User' to 'App\Models\User' for this Tinker session.
+=> App\Models\User {#3514}
+>>> $user->name = "Akasuna Hera"
+=> "Akasuna Hera"
+>>> $user->email = "akasuna.hera@gmail.com"
+=> "akasuna.hera@gmail.com"
+>>> $user->password = bcrypt('123')
+=> "$2y$10$PP7l0kTVlR5MIBehEFzOJOlXu4ioFC75K8XG2ewRMfU0EaDMDgPFu"
+>>> $user->save()	//harus di save soalnya kalo engga nanti data diatas ga kesimpen
+=> true
+>>>
+
+- kalo mau liat isi tabelnya pake command "$user->all()", dan datanya udah dalam bentuk collection. ini kayah query select * from.
+
+- bisa kita cari data berdasarkan id pake "$user->find(noId)". ini khusus nyari id aja. tapi ini kalo id nya gaada dia return NULL. bisa kita buat supaya pas id nya gaada dia ga return NULL tapi nunjukin pesan erornya, pake "$user->findOrFail(noId)".
+
+- kita bisa bikin model di terminal. caranya ketik aja dulu command "php artisan help make:model" buat liat dokumentasi optionnya. disini kita bisa bikin model sekaligus bikin migration, bahkan bisa sekalian controller, factory,dll. jadi cuma sekali command bisa bikin banyak.
+
+- cara bikin eloquent modelnya itu bisa lewat terminal "php artisan make:model -m Nama_model" atau lewat vscode di command pallate cari "Artisan: Make Model" terus isi nama modelnya.
+
+- setelah model dan migrasinya jadi. buka file php migrationnya di folder database/migration. terus nama tabelnya. nah disitu kita bikin migrasi atau setingan2 buat table nya, kalo udah baru deh di bikin tabelnya di database. cara bikinnya pake terminal, terus command "php artisan migrate". kalo migrate aja, tabel user yang tadi dah dibikin ga di hapus. tapi kalo migrate:fresh, tabel user tadi bakal di hapus dan dibikin baru jadinya kosong.
+
+- di controller post ada method protected $fillable itu buat deklarasi field mana aja yang boleh diisi pake method create. dan ada kebalikannya yaitu $guarded buat deklarasi field mana aja yang gaboleh diisi.
+
+===================================== post category & eloquent ==================================
+-bikin model sama migrasi dulu buat model Category : php artisan make:model -m Category
+- jangan lupa bikin foreign key di migration posts supaya bisa nyambung antara tabel category sama posts
+- isi data category pake tinker :
+>>> $category = new Category
+[!] Aliasing 'Category' to 'App\Models\Category' for this Tinker session.
+=> App\Models\Category {#3516}
+>>> $category->name = 'Sport'
+=> "Sport"
+>>> $category->slug ='sport'
+=> "sport"
+>>> $category->save()
+=> true
+>>>
+- kalo isi data pake create :
+    Category::create([
+        'name'=>'Life Style',
+        'slug'=>'life-style'
+    ])
+tapi harus di kasih "protected $guarded =['id'];" di  model Category supaya kasih tau mana field yg fillable nya.
+- abis itu tambahin category_id di tabel posts dan isi sesuai category
+- tes di tinker cari post berdasarkan category_id 'Post::where('category',1)->get()'. dan semuanya muncul yg category_id nya 1
+- sekarang coba biar di post yang muncul itu nama category nya bukan idnya pake eloquent relationship.
+- untuk relationship one to many pake hasMany(), kalo one to one pak belongsTo(). 
+- bikin function category di Post isi "return $this->belongsTo(Category::class);" buat nunjukin relationship one to one antara post dan category
+- kalo udah coba di tinker buat panggil satu post pake $post = Post::first() terus $post->category buat ambil method category di controller Post
+- dan data category nya langsung keambil semua satu row sesuai id category di tabel postnya. jadi ini kayak join gitu.
+- dan sekarang udah bisa langsung di panggil di view pake {{ $category }} buat panggil nama kategorinya.
+- sekarang kalo mau ambil posts berdasarkan kategori tinggal bikin routenya dulu, terus view, sama bikin relationshipnya di Category bua bikin method post hasMany.
+
+===================================== database seeder ==================================
+- di laravel ga pake base_url lagi, tapi pake '/' di paling awal link
+- seed itu buat bikin data testing. jadi seeding itu fitur laravel buat generate data secara otomatis ke tabel kita (data dummy)
+- ada perubahan di file migration. yang bagian foreign itu ubah jadi foreignId. sebenernya pengennya sih nama id di setiap tabel itu beda2 sesuai tabelnya tapi gabisa nanti eror pas pake method ::all() jadinya harus 'id' aja namanya.
+- seeder itu kalo udah sekali di panggil abis itu di panggil lagi dia bakal nambah datanya, bukan nimpa. jadi kalo data di database maunya sesuai yg di seeder nya aja pake perintah 'php artisan migrate:fresh --seed' buat migrasi sekalian seeding.
+
+===================================== Factory & Faker ==================================
+- factory itu kayak pabrik pembuat data. nah di factory nanti kita pake library namanya Faker yaitu untuk generate data dummy supaya kita ga perlu bikin data dummy manual satu2.
+- liat dokumentasi fakernya di 'fakerphp.github.io' buat bisa liat data apa aja yang bisa di generate.
+- di faker juga bisa localization buat nentuin data2nya berdasarkan negara. tapi harus di setting dulu di config/app.php line 109 bagian faker_locale, ubah jadi 'env('FAKER_LOCALE','en_US'),'
+- setelah itu buka file env nya, ketik 'FAKER_LOCALE=id_ID' di paling bawah.
+- cara bikin factory itu 'php artisan make:factory NamaFactory'
+- cara bikin model biar sekaligus dibikinin migrasi, factory, sama seeder itu 'php artisan make:model ModelName -mfs'
+
+
+===================================== N + 1 Problem ==================================
+- problem ini terjadi ketika kita ambil data di database dan kita looping data2nya. kita jadinya nanti querynya berulang-ulang (nQuery) yang padahal harusnya ada 2 query aja (all sama yg di dalem foreach nya).
+- ini terjadi pas kita join tabel. misal kita query data all posts, abis itu di view kan kita foreach, nah di dalem foreach itu kita panggil tabel lain lagi buat author sama kategori, jadi kita looping di posts dan looping di author dan kategori dalam waktu yg sama. itu jadi berat webnya kalo datanya banyak.
+- kita coba pake library clockwork buat liat aplikasi php kita melakukan berpa kali query. cari aja di github webnya. instalnya pake komposer 'composer require itsgoingd/clockwork'. instalnya harus di app laravel kita di terminal
+- disini clockworknya gak bisa nampilin tab database jadi gak tau jumlah querynya.
+- ada 2 jenis loading. ada lazy loading : load data kalo pas dibutuhin aja. dan ada eager loading : load semua data di awal (kayak js gitu).
+- kan di web blog ini ada 17 post, pas di lihat ternyata di halaman blog ada 35 query. 17 kali untuk post, 6 author, dan 6 kategori.
+- pas pake eager loading, query untuk halaman blog cuma 3 doang. caranya tinggal pakein '...with(['namaTabel'])->...' setelah nama controller.
+- untuk efisiensi sih masih kurang tau lebih bagus lazy atau eager. soalnya kalo diliat di clockwork sih respon time nya masih lebih lama yang eager.
+- ada juga lazy eager loading. jadi digabung gitu. kalo kita pake model binding di route ga bisa pake eager loading, bisanya pake lazy eager. caranya mirip eager tinggal ganti with jadi load. tapi pas lagi di pake di route author sih jumlah querynya gak beda sama yg lazy, tapi respon time database nya lebih kecil dibanding yg lazy.
+- kalo menurut pengamatan gw sih yang lazy loading respon time keseluruhannya lebih cepet, tapi respon time untuk database lebih cepet pake eager loading dan lumayan signifikan. jadi kayaknya sih eager loading itu untuk meringankan beban database aja, untuk memory sih sama aja.
+- but somehow yg lazy eager loading itu kayak ga berfungsi. jumlah querynya sama aja.
+
+===================================== Redesign UI ==================================
+- pake API Unsplash buat gambar thumbnail.
+- di controller post kan ada with. itu di hapus aja, taro di model Post bikin properti protected $with =['category','author'];
+- untuk bikin waktu postingannya (misal '1 hour ago') itu pake function diffForHumans(). contoh $post->created_at->diffForHumans(). cuma yah masalahnya laravel ini waktu nya ga nyesuain waktu di pc user, tapi kayak punya waktu sendiri gitu jadi gak akurat.
+- ada method skip() bisa di pake di foreach, soalnya kan latest post nya dah di tampilin di paling atas di luar foreach, jadi nanti di foreach yang latest post di skip(1) untuk skip 1 post.
+- untuk body post kita ubah di postFactory dari paragraph menjadi paragraphs. nah nanti si faker bikin kata2 random sebanyak x paragraf, tapi dia bentuknya array, dan gaada tag p nya jadi kalo di tampilin di web ga bentuk paragraf. ini di akalin pake emmet (.) jadi '<p>' . implode('</p><p>',$this->faker->paragraphs.... implode itu buat gabungin, jadi nanti di awal array dikasih tag p dan di akhir array di kasih tutup dan buka p.
+- ada cara lain. yaitu arraynya di ubah dulu jadi collection dengan cara collect($this->faker->paragraphs....)->map(fn($paragraf) => "<p>$paragraf</p>")->implode('');
+- benerin active navbarnya. nanti yg di route $activenya eror, bersihin dulu cache nya pake php artisan route:cache terus reload
+
+===================================== Seraching & Pagination ==================================
+- ada fitur extended dari eloquent yaitu query scope (cari aja di dokumentasi laravel8). 
+- ada sintaks baru  di php 7 yaitu 'Null Coalescing Operator', jadi buat di if isset supaya lebih ringkas.
+	from this 	: isset($filters['search']) ? $filters['search'] : false)
+	to this	: $filters['search']) ?? false
+- ada pengganti if dari laravel yaitu method when() dari collection. parameternya bisa pake isi pengondisian seperti biasa.
+- di laravel ada method whenHas(). kalo when doang kan ga bisa di join. nah whenHas() itu bisa di join. parameternya nama method relationshipnya (yg isinya belongsTo() atau hasMany()).
+- cara bikin pagination tinggal ganti method ->get() jadi ->paginate(jumlah_data_perhalaman).
+	from this	: Post::latest()->filter(request(['search', 'category', 'author']))->get()
+	to this	: Post::latest()->filter(request(['search', 'category', 'author']))->paginate(7)->withQueryString()
+- method withQueryString() itu supaya pas di klik pagination nya, parameter search nya gak ilang.
+- buat nambahin linknya tinggal panggil {{ $posts->links() }}. tapi karena default laravel itu pake tailwind, sementara ini pakenya bootstrap, harus di setting di file app/providers/AppServiceProviders.php. terus di method boot() isi Paginator::useBootstrap();. terus panggil file Illuminate\Pagination\Paginator; di paling atas.
+
+===================================== View Login & Registration ==================================
+- 
